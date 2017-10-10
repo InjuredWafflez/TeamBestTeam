@@ -1,0 +1,10 @@
+Endless Runner:
+  -try to run as far as possible to reach a new high score
+  -the speed picks up as the game goes on
+  -random platforms you must jump on to live
+  -gaps you must jump accross
+  -random enemies to dodge
+  -randomm powerups floating around to:
+    *slow things down temporarily
+    *run for you temporarily
+    *invincibility from enemies
