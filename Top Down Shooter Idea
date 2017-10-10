@@ -1,0 +1,19 @@
+TOP DOWN SHOOTER:
+  -wave based play with highschores
+    *go as long as possible before dieing
+  -as waves progress, enemies get faster, stronger, and more health
+  -can collect points (points from killing? dropped from enemies?) during waves to level up between waves
+  -possible upgrades:
+    *weapon type(rapid fire, spread)
+    *max health
+    *weapon damage
+    *movement speed
+    *something related to more frequent or stronger powerups/specials
+  -random power up or specials can drop from enemies.
+    *temporary super shots or bullets get shot in every direction
+    *upgrades/points/health can also be dropped
+  -a play area a few times larger than the players screen so they can run around
+    *bounded inside of some play area
+  -enemies spawn outside of the players view
+  -obstacles randomly generated each wave?
+    *trees, walls, rocks, etc
