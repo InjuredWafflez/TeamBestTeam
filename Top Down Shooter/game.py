@@ -175,14 +175,14 @@ HEIGHT = 600
 # map object
 play_map = pygame.image.load("images/background.png")
 
-#create a pygame clock object
-clock = pygame.time.Clock()
-
 # Create a player object of some soup
 soup =  Player("images/soup.png")
 
 # Create the game object
 game = Game(play_map, soup, WIDTH, HEIGHT)
+
+# Setup the game
+game.setup()
 
 # run the game
 game.play()
