@@ -79,91 +79,125 @@ class Player(pygame.sprite.Sprite):
         self._y += self._y_vector #+ (self.height*0.5)
 
         
+# class for the actual game        
+class Game(object):
+    def __init__(self, map, player, width, height):
+        # List to store all the enemies and game data during the current wave
+        self.enemies = []
+        self.projectiles = []
+
+        # width and height of the display window
+        self.width = width
+        self.height = height
+
+        # The pygame window
+        self.window = pygame.display.set_mode((self.width, self.height))
+
+        # Store the map to play with and the player to use
+        self.map = map
+        self.player = player
+
+        # Hold the portion of the map to show on the display based off the players position
+        self.map_view = pygame.Surface((self.width, self.height))
         
+        # List to keep track of what keyboard button have been pressed
+        # W, A, S, D
+        self.input_map = [False, False, False, False]
+
+        # Create a pygame clock object
+        self.clock = pygame.time.Clock()
+
+        #set crashed state variable to false
+        self.crashed = False
+
+    # Function to setup the game
+    def setup(self):
+        pass
+
+    # Function to actually play the game
+    def play(self):
+        while not self.crashed:
+            for event in pygame.event.get():
+                if event.type == pygame.QUIT:
+                    crashed = True
+
+                # Detect when keys are pressed
+                if event.type == pygame.KEYDOWN:    
+                    if event.key == pygame.K_w:
+                        self.input_map[0] = True
+                    if event.key == pygame.K_a:
+                        self.input_map[1] = True
+                    if event.key == pygame.K_s:
+                        self.input_map[2] = True
+                    if event.key == pygame.K_d:
+                        self.input_map[3] = True
+                        
+                # Detect when keys are released       
+                if event.type == pygame.KEYUP:
+                    if event.key == pygame.K_w:
+                        self.input_map[0] = False
+                    if event.key == pygame.K_a:
+                        self.input_map[1] = False
+                    if event.key == pygame.K_s:
+                        self.input_map[2] = False
+                    if event.key == pygame.K_d:
+                        self.input_map[3] = False
+
+
+            # create a surface of only a portion of the map based on player position
+            self.map_view = pygame.Surface((self.width, self.height))
+            self.map_view.blit(self.map, (0,0), (self.player.x, self.player.y,\
+                                                 self.width, self.height))
+
+            self.player.move_keyboard(self.input_map, 3200, 2400)
+
+            # print the background then the player in the center on top of the background
+            self.window.blit(self.map_view, (0,0))
+            self.window.blit(soup.image, (self.width/2 - self.player.width/2, \
+                                          self.height/2 - self.player.height/2))
+                
+            pygame.display.update()
+
+            # limit the game to 60 fps
+            self.clock.tick(60)
+
+        pygame.quit()
+        quit()
+
 
 #############################################################################
-# Setup the game
+# Play the Game
 #############################################################################
 
 WIDTH = 800
 HEIGHT = 600
 
-# create a pygame display object
-# set the width and height of the display
-game_display = pygame.display.set_mode((WIDTH, HEIGHT))
-
-#need to make some sort of class for this background and play area
+# map object
 play_map = pygame.image.load("images/background.png")
 
 #create a pygame clock object
 clock = pygame.time.Clock()
 
-#set crashed state variable to false
-crashed = False
-
 # Create a player object of some soup
 soup =  Player("images/soup.png")
 
-#############################################################################
-# Play the Game
-# need to put all this in a class of its own also
-#############################################################################
+# Create the game object
+game = Game(play_map, soup, WIDTH, HEIGHT)
 
-#set background on display to all white
-game_display.fill((255,255,255))
-
-# array to store status of keyboard inputs
-# W, A, S, D
-input_map = [False, False, False, False]
-
-while not crashed:
-    for event in pygame.event.get():
-        if event.type == pygame.QUIT:
-            crashed = True
-
-        if event.type == pygame.KEYDOWN:    
-            if event.key == pygame.K_w:
-                input_map[0] = True
-            if event.key == pygame.K_a:
-                input_map[1] = True
-            if event.key == pygame.K_s:
-                input_map[2] = True
-            if event.key == pygame.K_d:
-                input_map[3] = True
-                
-        if event.type == pygame.KEYUP:
-            if event.key == pygame.K_w:
-                input_map[0] = False
-            if event.key == pygame.K_a:
-                input_map[1] = False
-            if event.key == pygame.K_s:
-                input_map[2] = False
-            if event.key == pygame.K_d:
-                input_map[3] = False
+# run the game
+game.play()
 
 
-    # create a surface of only a portion of the map based on player position
-    map_display = pygame.Surface((WIDTH, HEIGHT))
-    map_display.blit(play_map, (0,0), (soup.x, soup.y, WIDTH, HEIGHT))
-
-    soup.move_keyboard(input_map, 3200, 2400)
-
-    # print the background then the player in the center on top of the background
-    game_display.blit(map_display, (0,0))
-    game_display.blit(soup.image, (WIDTH/2 - soup.width/2, HEIGHT/2 - soup.height/2))
-        
-    pygame.display.update()
-
-    # limit the game to 60 fps
-    clock.tick(60)
-
-pygame.quit()
-quit()
-
-
-
-
-
+##try:
+##    while(True):
+##
+##        #RUN CODE HERE
+##
+##
+##
+##except KeyboardInterrupt:
+##    # reset the GPIO pins
+##    GPIO.cleanup()
 
 
 
