@@ -73,10 +73,22 @@ class Player(pygame.sprite.Sprite):
             self._x_vector = 7
         else:
             self._x_vector = 0
-            
 
-        self._x += self._x_vector #+ (self.width*0.5)
-        self._y += self._y_vector #+ (self.height*0.5)
+        # Limit the x and y to the max determined from the map image
+        if self._x >= x_max and self._x_vector > 0:
+            self._x_vector = 0
+        
+        elif self._x <= 0 and self._x_vector < 0:
+            self._x = 0
+            
+        if self._y >= y_max and self._y_vector > 0:
+            self._y_vector = 0
+        
+        elif self._y <= 0 and self._y_vector < 0:
+            self._y = 0
+            
+        self._x += self._x_vector
+        self._y += self._y_vector
 
         
 # class for the actual game        
@@ -89,6 +101,11 @@ class Game(object):
         # width and height of the display window
         self.width = width
         self.height = height
+
+        # Map offsets since (0,0) on the display is top left and not center
+        # these offset the map based off the size of the display
+        self.x_offset = width/2
+        self.y_offset = height/2
 
         # The pygame window
         self.window = pygame.display.set_mode((self.width, self.height))
@@ -145,17 +162,20 @@ class Game(object):
 
 
             # create a surface of only a portion of the map based on player position
+            # apply the offsets to the map_view image to have it centered correctly
             self.map_view = pygame.Surface((self.width, self.height))
-            self.map_view.blit(self.map, (0,0), (self.player.x, self.player.y,\
+            self.map_view.blit(self.map, (0,0), ((self.player.x - self.x_offset), \
+                                                 (self.player.y - self.y_offset),\
                                                  self.width, self.height))
 
-            self.player.move_keyboard(self.input_map, 3200, 2400)
+            self.player.move_keyboard(self.input_map, self.map.get_width(), self.map.get_height())
 
             # print the background then the player in the center on top of the background
             self.window.blit(self.map_view, (0,0))
             self.window.blit(soup.image, (self.width/2 - self.player.width/2, \
                                           self.height/2 - self.player.height/2))
-                
+
+            # update the pygame display    
             pygame.display.update()
 
             # limit the game to 60 fps
