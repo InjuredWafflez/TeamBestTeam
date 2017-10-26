@@ -94,42 +94,60 @@ class Player(Asset):
         self._x += self._x_vector
         self._y += self._y_vector
 
-    # shoot the weapon
-    def shoot(self, weapon):
-        pass
-
 # Top down shooter weapon and bullet class
 class Bullet(Asset):
     # Inherit from asset class for x and y pos and x and y velocity\
     # get the x and y max from the map
-    def __init__(self, image, map):
+    def __init__(self, image, x, y, x_vec, y_vec, speed):
         # Call the parent class (Asset) constructor
         Asset.__init__(self, image)
-        
-        self.x_max = map.get_width()
-        self.y_max = map.get_height()
+
+        self._x = x
+        self._y = y
+        self._x_vector = x_vec
+        self._y_vector = y_vec
+        self.speed = speed
 
     # update the position of the bullet on the screen
     # have the bullet delete itself if outside the bounds of the map
     def update(self):
-        pass
+        self._x += self._x_vector * self.speed
+        self._y += self._y_vector * self.speed
+        
 
 class Weapon(Asset):
-    def __init__(self, image, player):
+    def __init__(self, image):
         # Call the parent class (Asset) constructor
         Asset.__init__(self, image)
-        
-        # keep track of the player object for the x and y position
-        self.player = player
+
+        self.display_width =  pygame.display.get_surface().get_width()
+        self.display_height =  pygame.display.get_surface().get_height()
     
     # upadate the x and y aim vector of the weapon
     # using the players position and mouse
     def update(self):
         mouse_pos = pygame.mouse.get_pos()
-        self._x_vector = player.x - self._x
+        self._x_vector =  mouse_pos[0] - (self.display_width/2)
+        self._y_vector = mouse_pos[1] - (self.display_height/2)
+
+        # Find the maginitude of the vector
+        vec_mag = (self._x_vector**2 + self._y_vector**2)**(0.5)
+
+        # Create unit vector components using the magnitude
+        self._x_vector = self._x_vector / vec_mag
+        self._y_vector = self._y_vector / vec_mag
     
     # create a bullet at the players postion
-    def fire(self, group):
-        update()
+    def fire(self, player):
+        self.update()
+        # Create a bullet objeect
+        bullet = Bullet("images/ball.png", player.x, player.y, self._x_vector, self._y_vector, 8)
+        return bullet
+
+
+
+
+
+
+
         
-        pass

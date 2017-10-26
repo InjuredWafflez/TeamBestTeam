@@ -9,23 +9,24 @@ class Game(object):
     def __init__(self, map, player, width, height):
         # List to store all the enemies and game data during the current wave
         self.enemies = []
-        self.projectiles = []
+        self.bullets = pygame.sprite.Group()
 
         # width and height of the display window
         self.width = width
         self.height = height
-
-        # Map offsets since (0,0) on the display is top left and not center
-        # these offset the map based off the size of the display
-        self.x_offset = width/2
-        self.y_offset = height/2
 
         # The pygame window
         self.window = pygame.display.set_mode((self.width, self.height))
 
         # Store the map to play with and the player to use
         self.map = map
+        self.temp_map = self.map.copy()
         self.player = player
+
+        # Map offsets since (0,0) on the display is top left and not center
+        # these offset the map based off the size of the display
+        self.x_offset = width/2
+        self.y_offset = height/2
 
         # Hold the portion of the map to show on the display based off the players position
         self.map_view = pygame.Surface((self.width, self.height))
@@ -45,6 +46,11 @@ class Game(object):
         #set crashed state variable to false
         self.crashed = False
 
+        # Create a weapon object
+        self.blaster = Weapon("images/fire-bolt.png")
+        self.shot_delay = 150
+        self.last_shot = 0
+
     # Function to setup the game
     def setup(self):
         pass
@@ -52,7 +58,16 @@ class Game(object):
     def update(self):
         # iterate through the enemies and projectiles lists and call their
         # respective update functions
-        pass
+        #self.bullet_overlay = pygame.Surface((self.map.get_width(), self.map.get_height()))
+        #self.bullet_overlay.set_alpha(100)
+        self.temp_map = self.map.copy()
+        for b in self.bullets.sprites():
+            b.update()
+            if b.x > self.map.get_width() or b.x < 0 or b.y > self.map.get_height() or b.y < 0:
+                b.kill()
+            else:
+                # If on the map view display then show the bullet
+                self.temp_map.blit(b.image, (b.x, b.y))
 
     # check for pygame events
     # update the input status variables
@@ -99,6 +114,12 @@ class Game(object):
                         self.input_map['left_click'] = False
                     elif event.button == 3:
                         self.input_map['right_click'] = False
+
+    def fire_weapon(self):
+        if pygame.time.get_ticks() - self.last_shot > self.shot_delay:
+            self.bullets.add(self.blaster.fire(self.player))
+            #print "Fire!"
+            self.last_shot = pygame.time.get_ticks()
                     
 
     # Function to actually play the game
@@ -111,11 +132,16 @@ class Game(object):
             # create a surface of only a portion of the map based on player position
             # apply the offsets to the map_view image to have it centered correctly
             self.map_view = pygame.Surface((self.width, self.height))
-            self.map_view.blit(self.map, (0,0), ((self.player.x - self.x_offset), \
+            self.update()
+            
+            self.map_view.blit(self.temp_map, (0,0), ((self.player.x - self.x_offset), \
                                                  (self.player.y - self.y_offset),\
                                                  self.width, self.height))
 
             self.player.move_keyboard(self.input_map, self.map.get_width(), self.map.get_height())
+
+            if self.input_map['left_click'] == True:
+                self.fire_weapon()
 
             # print the background then the player in the center on top of the background
             self.window.blit(self.map_view, (0,0))
