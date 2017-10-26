@@ -1,101 +1,8 @@
 import pygame
+from classes import *
 
 #initialize pygame
 pygame.init()
-
-# Base class with x and y pos and x and y vec for other classes to inherit from
-class Asset(object):
-    def __init__(self, image = "no-image"):
-        self.x = 0
-        self.y = 0
-        self.x_vector = 0
-        self.y_vector = 0
-
-        self.image = pygame.image.load(image)
-        
-        # create a collision box for the player using pygame image ractange
-        self.box = self.image.get_rect()
-        self.width = self.image.get_width()
-        self.height = self.image.get_height()
-
-    # getters and setters for x and y positions
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        # Ensures the x-value is a int
-        self._x = int(value)
-
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        # Ensures the y-value is a int
-        self._y = int(value) #+ (self.height/2)
-
-    # getters and setters for x and y vectors
-    @property
-    def x_vector(self):
-        return self._x_vector
-    
-    @x_vector.setter
-    def x_vector(self, value):
-        self._x_vector = value
-
-    @property
-    def y_vector(self):
-        return self._y_vector
-
-    @y_vector.setter
-    def y_vector(self, value):
-        self._y_vector = value
-        
-# Player Sprite class
-class Player(pygame.sprite.Sprite, Asset):
-    def __init__(self,image = "no-image"):
-        # Call the parent class (Sprite) constructor
-        pygame.sprite.Sprite.__init__(self)
-        # Call the parent class (Asset) constructor
-        Asset.__init__(self, image)
-        
-
-    def move_keyboard(self, key_input, x_max, y_max):
-        if key_input['w'] == True:
-            self._y_vector = -7
-        
-        elif key_input['s'] == True:
-            self._y_vector = 7
-        else:
-            self._y_vector = 0
-
-        if key_input['a'] == True:
-            self._x_vector = -7
-        
-        elif key_input['d'] == True:
-            self._x_vector = 7
-        else:
-            self._x_vector = 0
-
-        # Limit the x and y to the max determined from the map image
-        if self._x >= x_max and self._x_vector > 0:
-            self._x_vector = 0
-        
-        elif self._x <= 0 and self._x_vector < 0:
-            self._x = 0
-            
-        if self._y >= y_max and self._y_vector > 0:
-            self._y_vector = 0
-        
-        elif self._y <= 0 and self._y_vector < 0:
-            self._y = 0
-            
-        self._x += self._x_vector
-        self._y += self._y_vector
-
         
 # class for the actual game        
 class Game(object):
@@ -125,7 +32,12 @@ class Game(object):
         
         # Dictionary to keep track of what keyboard button have been pressed
         # W, A, S, D
-        self.input_map = {'w':False, 'a':False, 's':False, 'd':False}
+        self.input_map = {'w':False, 'a':False, 's':False, 'd':False,\
+                          'left_click':False, 'right_click':False}
+
+        # store the position of the mouse for weapon use
+        # stored as '(x,y)' value
+        self.mouse_pos = pygame.mouse.get_pos()
 
         # Create a pygame clock object
         self.clock = pygame.time.Clock()
@@ -147,29 +59,47 @@ class Game(object):
     def check_events(self):
         for event in pygame.event.get():
                 if event.type == pygame.QUIT:
-                    crashed = True
+                    self.crashed = True
+
+                # Update the mouse pos
+                if event.type == pygame.MOUSEMOTION:
+                    self.mouse_pos = pygame.mouse.get_pos()
 
                 # Detect when keys are pressed
                 if event.type == pygame.KEYDOWN:    
                     if event.key == pygame.K_w:
                         self.input_map['w'] = True
-                    if event.key == pygame.K_a:
+                    elif event.key == pygame.K_a:
                         self.input_map['a'] = True
-                    if event.key == pygame.K_s:
+                    elif event.key == pygame.K_s:
                         self.input_map['s'] = True
-                    if event.key == pygame.K_d:
+                    elif event.key == pygame.K_d:
                         self.input_map['d'] = True
                         
                 # Detect when keys are released       
-                if event.type == pygame.KEYUP:
+                elif event.type == pygame.KEYUP:
                     if event.key == pygame.K_w:
                         self.input_map['w'] = False
-                    if event.key == pygame.K_a:
+                    elif event.key == pygame.K_a:
                         self.input_map['a'] = False
-                    if event.key == pygame.K_s:
+                    elif event.key == pygame.K_s:
                         self.input_map['s'] = False
-                    if event.key == pygame.K_d:
+                    elif event.key == pygame.K_d:
                         self.input_map['d'] = False
+
+                # Detect if the mouse has been clicked
+                elif event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 1:
+                        self.input_map['left_click'] = True
+                    elif event.button == 3:
+                        self.input_map['right_click'] = True
+                
+                elif event.type == pygame.MOUSEBUTTONUP:
+                    if event.button == 1:
+                        self.input_map['left_click'] = False
+                    elif event.button == 3:
+                        self.input_map['right_click'] = False
+                    
 
     # Function to actually play the game
     def play(self):
@@ -235,3 +165,23 @@ game.play()
 ##except KeyboardInterrupt:
 ##    # reset the GPIO pins
 ##    GPIO.cleanup()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
