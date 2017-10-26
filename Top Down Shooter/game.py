@@ -3,11 +3,13 @@ import pygame
 #initialize pygame
 pygame.init()
 
-# Player Sprite class
-class Player(pygame.sprite.Sprite):
-    def __init__(self,image = "no-image"):
-        # Call the parent class (Sprite) constructor
-        pygame.sprite.Sprite.__init__(self)
+# Base class with x and y pos and x and y vec for other classes to inherit from
+class Asset(object):
+    def __init__(self, image = "no-image"):
+        self.x = 0
+        self.y = 0
+        self.x_vector = 0
+        self.y_vector = 0
 
         self.image = pygame.image.load(image)
         
@@ -15,12 +17,7 @@ class Player(pygame.sprite.Sprite):
         self.box = self.image.get_rect()
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-        
-        self.x = 0
-        self.y = 0
-        self.x_vector = 0
-        self.y_vector = 0
-    
+
     # getters and setters for x and y positions
     @property
     def x(self):
@@ -38,7 +35,7 @@ class Player(pygame.sprite.Sprite):
     @y.setter
     def y(self, value):
         # Ensures the y-value is a int
-        self._y = int(value) + (self.height/2)
+        self._y = int(value) #+ (self.height/2)
 
     # getters and setters for x and y vectors
     @property
@@ -56,20 +53,29 @@ class Player(pygame.sprite.Sprite):
     @y_vector.setter
     def y_vector(self, value):
         self._y_vector = value
+        
+# Player Sprite class
+class Player(pygame.sprite.Sprite, Asset):
+    def __init__(self,image = "no-image"):
+        # Call the parent class (Sprite) constructor
+        pygame.sprite.Sprite.__init__(self)
+        # Call the parent class (Asset) constructor
+        Asset.__init__(self, image)
+        
 
     def move_keyboard(self, key_input, x_max, y_max):
-        if key_input[0] == True:
+        if key_input['w'] == True:
             self._y_vector = -7
         
-        elif key_input[2] == True:
+        elif key_input['s'] == True:
             self._y_vector = 7
         else:
             self._y_vector = 0
 
-        if key_input[1] == True:
+        if key_input['a'] == True:
             self._x_vector = -7
         
-        elif key_input[3] == True:
+        elif key_input['d'] == True:
             self._x_vector = 7
         else:
             self._x_vector = 0
@@ -117,9 +123,9 @@ class Game(object):
         # Hold the portion of the map to show on the display based off the players position
         self.map_view = pygame.Surface((self.width, self.height))
         
-        # List to keep track of what keyboard button have been pressed
+        # Dictionary to keep track of what keyboard button have been pressed
         # W, A, S, D
-        self.input_map = [False, False, False, False]
+        self.input_map = {'w':False, 'a':False, 's':False, 'd':False}
 
         # Create a pygame clock object
         self.clock = pygame.time.Clock()
@@ -131,35 +137,46 @@ class Game(object):
     def setup(self):
         pass
 
-    # Function to actually play the game
-    def play(self):
-        while not self.crashed:
-            for event in pygame.event.get():
+    def update(self):
+        # iterate through the enemies and projectiles lists and call their
+        # respective update functions
+        pass
+
+    # check for pygame events
+    # update the input status variables
+    def check_events(self):
+        for event in pygame.event.get():
                 if event.type == pygame.QUIT:
                     crashed = True
 
                 # Detect when keys are pressed
                 if event.type == pygame.KEYDOWN:    
                     if event.key == pygame.K_w:
-                        self.input_map[0] = True
+                        self.input_map['w'] = True
                     if event.key == pygame.K_a:
-                        self.input_map[1] = True
+                        self.input_map['a'] = True
                     if event.key == pygame.K_s:
-                        self.input_map[2] = True
+                        self.input_map['s'] = True
                     if event.key == pygame.K_d:
-                        self.input_map[3] = True
+                        self.input_map['d'] = True
                         
                 # Detect when keys are released       
                 if event.type == pygame.KEYUP:
                     if event.key == pygame.K_w:
-                        self.input_map[0] = False
+                        self.input_map['w'] = False
                     if event.key == pygame.K_a:
-                        self.input_map[1] = False
+                        self.input_map['a'] = False
                     if event.key == pygame.K_s:
-                        self.input_map[2] = False
+                        self.input_map['s'] = False
                     if event.key == pygame.K_d:
-                        self.input_map[3] = False
+                        self.input_map['d'] = False
 
+    # Function to actually play the game
+    def play(self):
+        while not self.crashed:
+
+            # check for inputs
+            self.check_events()
 
             # create a surface of only a portion of the map based on player position
             # apply the offsets to the map_view image to have it centered correctly
@@ -218,23 +235,3 @@ game.play()
 ##except KeyboardInterrupt:
 ##    # reset the GPIO pins
 ##    GPIO.cleanup()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
