@@ -5,37 +5,20 @@ class Asset(pygame.sprite.Sprite):
     def __init__(self, image = "no-image"):
         # Call the parent class (Sprite) constructor
         pygame.sprite.Sprite.__init__(self)
+
+        # Create the image and rectangular collision box
+        self.image = pygame.image.load(image)
+        self.rect = self.image.get_rect()
         
-        self.x = 0
-        self.y = 0
+        self.rect.x = 0
+        self.rect.y = 0
         self.x_vector = 0
         self.y_vector = 0
-
-        self.image = pygame.image.load(image)
         
         # create a collision box for the player using pygame image ractange
         self.box = self.image.get_rect()
         self.width = self.image.get_width()
         self.height = self.image.get_height()
-
-    # getters and setters for x and y positions
-    @property
-    def x(self):
-        return self._x
-
-    @x.setter
-    def x(self, value):
-        # Ensures the x-value is a int
-        self._x = int(value)
-
-    @property
-    def y(self):
-        return self._y
-
-    @y.setter
-    def y(self, value):
-        # Ensures the y-value is a int
-        self._y = int(value) #+ (self.height/2)
 
     # getters and setters for x and y vectors
     @property
@@ -59,6 +42,10 @@ class Player(Asset):
     def __init__(self,image = "no-image"):
         # Call the parent class (Asset) constructor
         Asset.__init__(self, image)
+
+        self.health = 3
+        self.speed = 7
+        self.score = 0
         
 
     def move_keyboard(self, key_input, x_max, y_max):
@@ -79,40 +66,46 @@ class Player(Asset):
             self._x_vector = 0
 
         # Limit the x and y to the max determined from the map image
-        if self._x >= x_max and self._x_vector > 0:
+        if self.rect.x >= x_max and self._x_vector > 0:
             self._x_vector = 0
         
-        elif self._x <= 0 and self._x_vector < 0:
+        elif self.rect.x <= 0 and self._x_vector < 0:
             self._x = 0
             
-        if self._y >= y_max and self._y_vector > 0:
+        if self.rect.y >= y_max and self._y_vector > 0:
             self._y_vector = 0
         
-        elif self._y <= 0 and self._y_vector < 0:
+        elif self.rect.y <= 0 and self._y_vector < 0:
             self._y = 0
             
-        self._x += self._x_vector
-        self._y += self._y_vector
+        self.rect.x += self._x_vector
+        self.rect.y += self._y_vector
+
+    def hit(self):
+        self.health -= 1
+        
 
 # Top down shooter weapon and bullet class
 class Bullet(Asset):
     # Inherit from asset class for x and y pos and x and y velocity\
     # get the x and y max from the map
-    def __init__(self, image, x, y, x_vec, y_vec, speed):
+    def __init__(self, image, player, x_vec, y_vec, damage, speed):
         # Call the parent class (Asset) constructor
         Asset.__init__(self, image)
 
-        self._x = x
-        self._y = y
+        self.player = player
+        self.rect.x = self.player.rect.x
+        self.rect.y = self.player.rect.y
         self._x_vector = x_vec
         self._y_vector = y_vec
         self.speed = speed
+        self.damage = damage
 
     # update the position of the bullet on the screen
     # have the bullet delete itself if outside the bounds of the map
     def update(self):
-        self._x += self._x_vector * self.speed
-        self._y += self._y_vector * self.speed
+        self.rect.x += (self._x_vector * self.speed) + self.player.x_vector
+        self.rect.y += (self._y_vector * self.speed) + self.player.y_vector
         
 
 class Weapon(Asset):
@@ -141,8 +134,53 @@ class Weapon(Asset):
     def fire(self, player):
         self.update()
         # Create a bullet objeect
-        bullet = Bullet("images/ball.png", player.x, player.y, self._x_vector, self._y_vector, 8)
+        bullet = Bullet("images/ball.png", player, self._x_vector, self._y_vector, 1, 9)
         return bullet
+
+class Enemy(Asset):
+    # Initialize enemy with player object so the enemy can track the player
+    def __init__(self, image, x, y, health, speed, player):
+        Asset.__init__(self, image)
+
+        self.rect.x = x
+        self.rect.y = y
+
+        self.health = health
+        self.speed = speed
+        
+        self.player = player
+        
+
+    def update(self):
+        # Update the enemy vector
+        self._x_vector = (self.player.rect.x - self.rect.x)
+        self._y_vector = (self.player.rect.y - self.rect.y)
+
+        # Find the maginitude of the vector
+        vec_mag = (self._x_vector**2 + self._y_vector**2)**(0.5)
+
+        # Create unit vector components using the magnitude and speed
+        self._x_vector = (self._x_vector / vec_mag)
+        self._y_vector = (self._y_vector / vec_mag)
+
+        # Update the position of the enemy
+        self.rect.x += self._x_vector * self.speed
+        self.rect.y += self._y_vector * self.speed
+
+    # call this when the enemy is hit with a bullet
+    # this will lower the health and destroy the object if need be
+    def hit(self, damage):
+        self.health -= damage
+        if self.health <= 0:
+            self.kill()
+            self.player.score += 1
+            print "Enemy Killed"
+        
+
+# Class for game powerups
+class PowerUp(Asset):
+    def __init__(self, image):
+        Asset.__init__(self, image)
 
 
 
