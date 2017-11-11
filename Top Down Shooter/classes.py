@@ -54,8 +54,9 @@ class Player(Asset):
 
         self.game = game
 
-        # The players deault weapon
+        # The players current weapon and default weapon
         self.weapon = weapon
+        self.weapon_default = weapon
         
 
     def move_keyboard(self, key_input, x_max, y_max):
@@ -280,12 +281,9 @@ class PowerUp_Weapon(Asset):
         self.time = 10000
 
         self.weapon_upgrade = weapon
-        
-        # keep track of the player's default weapon
-        self.weapon_default = self.player.weapon
 
     def end(self):
-        self.player.weapon = self.weapon_default
+        self.player.weapon = self.player.weapon_default
         self.kill()
         
     # use the power up

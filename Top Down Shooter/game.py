@@ -1,6 +1,8 @@
 import pygame
 from classes import *
 from random import randint
+from scores import *
+from time import sleep
 
 #initialize pygame
 pygame.init()
@@ -9,6 +11,17 @@ pygame.init()
 pygame.mixer.init(frequency=22050, size=-16, channels=2, buffer=4096)
 
 myFont = pygame.font.SysFont("monospace", 15)
+font2 = pygame.font.SysFont("monospace", 30)
+font3 = pygame.font.SysFont("monospace", 20)
+
+# Limit a number to a range
+def clamp(n, min, max):
+    if n < min:
+        return min
+    elif n > max:
+        return max
+    else:
+        return n
         
 # class for the actual game        
 class Game(object):
@@ -70,6 +83,9 @@ class Game(object):
         # variable to keep track of what screen to display
         self.screen = "game"
 
+        # Object to keep track of scores and highscores
+        self.scores = Scores("scores.txt")
+
     # Function to setup the game
     def setup(self):
         pass
@@ -109,7 +125,7 @@ class Game(object):
                     print "Enemy Killed"
                     # roll for a random power up drop
                     # have a 25% chance of a powerup drop
-                    self.roll_powerup(25,enemy)
+                    self.roll_powerup(20,enemy)
                 
 
         # Check for enemy-player collision
@@ -261,7 +277,90 @@ class Game(object):
             timer = myFont.render("PowerUp: " + str(time_left), 1, (255,255,255), (0,0,0))
             
             self.window.blit(timer, (self.width/2, 25))
-    
+
+    # Get the players initials
+    def get_name(self):
+        last_input = 0
+        initial_index = 0
+        initials = [65] * 3
+
+        # Have the get name pop up be have the width and height of the screen
+        pop_up =  pygame.Surface((self.width/(3), self.height/3))
+        box = pygame.Surface((pop_up.get_width()/3 - 10, pop_up.get_height()/3 - 10))
+        box.fill((0,255,0))
+
+        txt1 = myFont.render("New Highscore!", 1, (255,255,255), (0,0,0))
+        txt2 = myFont.render("Please enter your name", 1, (255,255,255), (0,0,0))
+        txt3 = myFont.render("using the left joystick", 1, (255,255,255), (0,0,0))
+        txt4 = myFont.render("Press the button to continue", 1, (255,255,255), (0,0,0))
+
+        while(True):
+
+            # check for inputs
+            self.check_events()
+            
+            if (pygame.time.get_ticks() - last_input > 100):
+                if(self.input_map['a']):
+                    initial_index = clamp(initial_index - 1, 0 , 2)
+                elif(self.input_map['d']):
+                    initial_index = clamp(initial_index + 1, 0 , 2)
+                    
+                elif(self.input_map['s']):
+                    initials[initial_index] = clamp(initials[initial_index] + 1, 65, 90)
+                elif(self.input_map['w']):
+                    initials[initial_index] = clamp(initials[initial_index] - 1, 65, 90)
+
+                last_input = pygame.time.get_ticks()
+
+            # Print "New Highscore!"
+            pop_up.blit(txt1, (pop_up.get_width()/2 - txt1.get_width()/2 , 5))
+
+            
+            #print boxes the initials will go in
+            pop_up.blit(box, (5, 25))
+            pop_up.blit(box, (pop_up.get_width()/2 - box.get_width()/2, 25))
+            pop_up.blit(box, (pop_up.get_width() - box.get_width() - 5, 25))
+
+            # Highlight the current selected initial
+            if initial_index == 0:
+                pop_up.blit(font2.render(chr(initials[0]), 1, (255,255,255), (0,0,255)),\
+                            (pop_up.get_width()/6-7, pop_up.get_height()/6+5))
+            else:
+                pop_up.blit(font2.render(chr(initials[0]), 1, (255,255,255), (0,0,0)),\
+                            (pop_up.get_width()/6-7, pop_up.get_height()/6+5))
+            if initial_index == 1:
+                pop_up.blit(font2.render(chr(initials[1]), 1, (255,255,255), (0,0,255)),\
+                            (pop_up.get_width()/2-7, pop_up.get_height()/6+5))
+            else:
+                pop_up.blit(font2.render(chr(initials[1]), 1, (255,255,255), (0,0,0)),\
+                            (pop_up.get_width()/2-7, pop_up.get_height()/6+5))
+
+            if initial_index == 2:
+                pop_up.blit(font2.render(chr(initials[2]), 1, (255,255,255), (0,0,255)),\
+                            ((pop_up.get_width()/6)*5-7, pop_up.get_height()/6+5))
+            else:
+                pop_up.blit(font2.render(chr(initials[2]), 1, (255,255,255), (0,0,0)),\
+                            ((pop_up.get_width()/6)*5-7, pop_up.get_height()/6+5))
+
+            # Print relevent info about entering name
+            pop_up.blit(txt2, (pop_up.get_width()/2 - txt2.get_width()/2 , pop_up.get_height()/3 + 30))
+            pop_up.blit(txt3, (pop_up.get_width()/2 - txt3.get_width()/2 , pop_up.get_height()/3 + 50))
+            pop_up.blit(txt4, (pop_up.get_width()/2 - txt4.get_width()/2 , pop_up.get_height()/2 + 60))
+            
+            
+            # Show the get name pop up on the window
+            self.window.blit(pop_up, (self.width/3, self.height/3))
+            
+            # update the pygame display    
+            pygame.display.update()
+            
+            # limit the game to 60 fps
+            self.clock.tick(60)
+            
+            # return the player name
+            if self.input_map['left_click'] == True:
+                return chr(initials[0]) + chr(initials[1]) + chr(initials[2])
+            
     # Play a wave                     
     def play_wave(self, wave_number):
         enemies_to_spawn = wave_number ** (1.5)
@@ -334,8 +433,70 @@ class Game(object):
 
     # Lose screen
     def lose_screen(self):
-        print "Add lose screen code"
 
+        # Some text to display
+        txt1 = font2.render("Game Over", 1, (255,255,255), (0,0,0))
+        txt2 = font2.render("Your Score: " + str(self.player.score), 1, (255,255,255), (0,0,0))
+        txt3 = myFont.render("Highscores:", 1, (255,255,255), (0,0,0))
+
+        self.window.fill((0,0,255))
+        
+        # If the player got a highscore then ask for the player's initials
+        if(self.scores.check_score(self.player.score)):
+            name = self.get_name()
+            self.scores.add_score(name, self.player.score)
+            sleep(.3)
+
+        while(True):
+
+            # check for inputs
+            self.check_events()
+            
+            self.window.fill((0,0,255))
+
+            # Print game over
+            self.window.blit(txt1, (self.window.get_width()/2 - txt1.get_width()/2, 15))
+            self.window.blit(txt2, (self.window.get_width()/2 - txt2.get_width()/2, 50))
+            
+            # Print the top 10 high scores
+            box = pygame.Surface((self.window.get_width()/2, self.window.get_height()/1.5))
+            box.fill((0,255,0))
+            box.blit(txt3, (box.get_width()/2 - txt3.get_width()/2, 10))
+
+            # Get the top 10 scores
+            top_10 = self.scores.get_top_10()
+
+            # blit the top ten scores to the box
+            for i in range(len(top_10)):
+                number = font3.render(str(i+1) + ":", 1, (255,255,255), (0,0,0))
+                name_txt = font3.render(str(top_10[i][1]), 1, (255,255,255), (0,0,0))
+                score_txt = font3.render(str(top_10[i][0]), 1, (255,255,255), (0,0,0))
+
+                box.blit(number, (10, 40 + 35*i))
+                box.blit(name_txt, (50, 40 + 35*i))
+                box.blit(score_txt, (200, 40 + 35*i))
+
+            self.window.blit(box, ( self.window.get_width()/2 - box.get_width()/2, 150))
+            
+            # Leave the lose screen once left mouse is clicked
+            if self.input_map['left_click'] == True:
+                self.screen = "game"
+
+                #reset the game before restarting
+                # move this to the main menu once its added
+                self.player.health = 3
+                self.player.score = 0
+                self.wave_number = 1
+                self.enemies.empty()
+                self.bullets.empty()
+                self.powerups.empty()
+                break
+            
+            # update the pygame display    
+            pygame.display.update()
+            
+            # limit the game to 60 fps
+            self.clock.tick(60)
 
     # level up screen
     def level_up_screen(self):
