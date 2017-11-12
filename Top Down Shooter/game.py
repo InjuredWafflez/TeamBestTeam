@@ -81,7 +81,7 @@ class Game(object):
          
 
         # variable to keep track of what screen to display
-        self.screen = "game"
+        self.screen = "main_menu"
 
         # Object to keep track of scores and highscores
         self.scores = Scores("scores.txt")
@@ -212,9 +212,9 @@ class Game(object):
     # given the enemy a random speed and random health
     def spawn_enemy(self):
         # Choose a random enemy speed
-        speed = randint(2, 4)
+        speed = randint(2, 3)
         # choose a random enemy health
-        health = randint(1, 3)
+        health = randint(2, 6)
 
         # choose a random starting position
         x = randint(0, self.map.get_width())
@@ -259,6 +259,7 @@ class Game(object):
     # Display game hud
     # show the health, current wave, and the score
     def game_hud(self):
+        # Text for the game hud
         health = myFont.render("Health: " + str(self.player.health), 1, (255,255,255), (0,0,0))
         wave = myFont.render("Wave: " + str(self.wave_number), 1, (255,255,255), (0,0,0))
         score = myFont.render("Score: " + str(self.player.score), 1, (255,255,255), (0,0,0))
@@ -269,14 +270,14 @@ class Game(object):
         self.window.blit(wave, (self.width-100, self.height - 20))
 
         if self.inventory:
-            self.window.blit(powerup, (self.width/2 - 20, 15))
-            self.window.blit(self.inventory.image, (self.width/2 + 50, 5))
+            self.window.blit(powerup, (self.width/2 - 60, 15))
+            self.window.blit(self.inventory.image, (self.width/2 + 10, 5))
 
         if self.active_powerup:
             time_left = self.active_powerup.time - (pygame.time.get_ticks() - self.powerup_timer)
             timer = myFont.render("PowerUp: " + str(time_left), 1, (255,255,255), (0,0,0))
             
-            self.window.blit(timer, (self.width/2, 25))
+            self.window.blit(timer, (self.width/2 + 60, 15))
 
     # Get the players initials
     def get_name(self):
@@ -289,6 +290,7 @@ class Game(object):
         box = pygame.Surface((pop_up.get_width()/3 - 10, pop_up.get_height()/3 - 10))
         box.fill((0,255,0))
 
+        # Text for the pop up
         txt1 = myFont.render("New Highscore!", 1, (255,255,255), (0,0,0))
         txt2 = myFont.render("Please enter your name", 1, (255,255,255), (0,0,0))
         txt3 = myFont.render("using the left joystick", 1, (255,255,255), (0,0,0))
@@ -298,7 +300,8 @@ class Game(object):
 
             # check for inputs
             self.check_events()
-            
+
+            # Change the current selected initials box using WASD
             if (pygame.time.get_ticks() - last_input > 100):
                 if(self.input_map['a']):
                     initial_index = clamp(initial_index - 1, 0 , 2)
@@ -364,7 +367,7 @@ class Game(object):
     # Play a wave                     
     def play_wave(self, wave_number):
         enemies_to_spawn = wave_number ** (1.5)
-        spawn_delay = 1000
+        spawn_delay = 3000
         last_spawn = 0
 
         print "Wave {} Started".format(wave_number)
@@ -373,7 +376,7 @@ class Game(object):
             
             if (pygame.time.get_ticks() - last_spawn > spawn_delay) and enemies_to_spawn > 0:
                 self.spawn_enemy()
-                spawn_delay = randint(1000, 3000)
+                spawn_delay = randint(1000, 4000)
                 last_spawn = pygame.time.get_ticks()
                 enemies_to_spawn -= 1
 
@@ -429,7 +432,67 @@ class Game(object):
     
     # Main Menu screen
     def main_menu(self):
-        print "add main menu code"
+
+        text1 = font2.render("Game", 1, (255,255,255), (0,0,0))
+        text2 = font2.render("Press Button to Start", 1, (255,255,255), (0,0,0))
+
+        button_index = 0;
+        last_input = 0
+
+        while(True):
+            #check for inputs
+            self.check_events()
+
+            self.window.fill((0,0,255))
+
+            #print main menu text
+            self.window.blit(text1, (self.window.get_width()/2 - text1.get_width()/2, 15))
+            self.window.blit(text2, (self.window.get_width()/2 - text2.get_width()/2, 50))
+
+            # Select either the quit or start button
+            if (pygame.time.get_ticks() - last_input > 100):
+                if(self.input_map['a']):
+                    button_index = 0
+                elif (self.input_map['d']):
+                    button_index = 1
+
+                    last_input = pygame.time.get_ticks()
+
+            # Display the start and quit button
+            # Highlight the selected button
+            if button_index == 0:
+                self.window.blit(font2.render("Play", 1, (255,255,255), (255,0,0)), \
+                                 ( self.window.get_width()/3, self.window.get_height()/2))
+                self.window.blit(font2.render("Quit", 1, (255,255,255), (0,0,0)), \
+                                 ( (self.window.get_width()/3) * 2, self.window.get_height()/2))
+            else:
+                self.window.blit(font2.render("Play", 1, (255,255,255), (0,0,0)), \
+                                 ( self.window.get_width()/3, self.window.get_height()/2))
+                self.window.blit(font2.render("Quit", 1, (255,255,255), (255,0,0)), \
+                                 ( (self.window.get_width()/3) * 2, self.window.get_height()/2))
+                                
+            #leave the main menu screen one left mouse is clicked
+            if self.input_map['left_click'] == True:
+                if button_index == 0:
+                    self.screen = "game"
+                    
+                    #reset the game before restarting
+                    self.player.health = 3
+                    self.player.score = 0
+                    self.wave_number = 1
+                    self.enemies.empty()
+                    self.bullets.empty()
+                    self.powerups.empty()
+                    break
+                
+                else:
+                    pygame.quit()
+
+            # update the pygame display    
+            pygame.display.update()
+            
+            # limit the game to 60 fps
+            self.clock.tick(60)
 
     # Lose screen
     def lose_screen(self):
@@ -480,16 +543,7 @@ class Game(object):
             
             # Leave the lose screen once left mouse is clicked
             if self.input_map['left_click'] == True:
-                self.screen = "game"
-
-                #reset the game before restarting
-                # move this to the main menu once its added
-                self.player.health = 3
-                self.player.score = 0
-                self.wave_number = 1
-                self.enemies.empty()
-                self.bullets.empty()
-                self.powerups.empty()
+                self.screen = "main_menu"
                 break
             
             # update the pygame display    
@@ -498,24 +552,12 @@ class Game(object):
             # limit the game to 60 fps
             self.clock.tick(60)
 
-    # level up screen
-    def level_up_screen(self):
-        print "add level up screen code"
-
-    # credit screen
-    def credit_screen(self):
-        print "add credit screen code"
-
-    # highscores screen
-    def highscores_screen(self):
-        print "add highscores screen code"
-
     # Function to actually play the game
     def play(self):
         test_timer = 0
         while not self.crashed:
 
-            # Check for which game screen or menu to display
+            # Display the correct screen based off the screen variable
             if self.screen == "game":
                 self.play_wave(self.wave_number)
 
@@ -524,18 +566,9 @@ class Game(object):
 
             elif self.screen == "lose_screen":
                 self.lose_screen()
-
-            elif self.screen == "level_up_screen":
-                self.level_up_screen()
-
-            elif self.screen == "credit_screen":
-                self.credit_screen()
-
-            elif self.screen == "highscores_screen":
-                self.highscores_screen()
                 
             else:
-                pass
+                print "Screen: '" + self.screen + "' does not exist"
 
             self.clock.tick(60)
 
