@@ -78,6 +78,12 @@ class Game(object):
         self.ding = pygame.mixer.Sound("sounds/ding.wav")
         self.hitmarker = pygame.mixer.Sound("sounds/hitmarker.wav")
         self.pew = pygame.mixer.Sound("sounds/pew.wav")
+
+        #Enemy image list
+        # List of possible images for the enemies
+        self.enemy_images = ["apple.png", "broccoli.png", "enemy.png", "fries.png", \
+                             "ham.png", "hamburger.png", "hotdog.png", "pizza.png", \
+                             "lemon.png", "pepper.png"]
          
 
         # variable to keep track of what screen to display
@@ -212,15 +218,17 @@ class Game(object):
     # given the enemy a random speed and random health
     def spawn_enemy(self):
         # Choose a random enemy speed
-        speed = randint(2, 3)
+        speed = randint(2, 4)
         # choose a random enemy health
-        health = randint(2, 6)
+        health = randint(3, 8)
+
+        image = self.enemy_images[randint(0, len(self.enemy_images) - 1)]
 
         # choose a random starting position
         x = randint(0, self.map.get_width())
         y = randint(0, self.map.get_height())
 
-        self.enemies.add(Enemy("images/enemy.png", x, y, health, speed, self.player))
+        self.enemies.add(Enemy("images/" + image, x, y, health, speed, self.player))
 
         print "Enemy Spawned"
 
@@ -376,7 +384,7 @@ class Game(object):
             
             if (pygame.time.get_ticks() - last_spawn > spawn_delay) and enemies_to_spawn > 0:
                 self.spawn_enemy()
-                spawn_delay = randint(1000, 4000)
+                spawn_delay = randint(300, 2000)
                 last_spawn = pygame.time.get_ticks()
                 enemies_to_spawn -= 1
 
